@@ -117,3 +117,79 @@ leave_plot
 
 Sidebar {.sidebar}
 ------------
+
+From 2015-2021, teacher pay increased in all four school districts at an average rate of 20.30%. The highest pay increase was observed in Douglas Unified Schools, where teacher salaries increased 23.66%. The lowest teacher pay increase was observed in Garden Grove Schools (18.72%). Teacher pay increased 19.04% in Central City District and 19.76% in Jackson City Schools. 
+
+```{r, include=FALSE}
+pay_inc <- teach_data %>% 
+  select(district, year, average_pay) %>% 
+  filter(year == 2015 | year == 2021) %>% 
+  arrange((year)) %>% 
+  pivot_wider(
+    names_from = year,
+    values_from = average_pay
+  ) %>% 
+  mutate(pay_diff = `2021` - `2015`,
+         pay_inc = pay_diff/`2015` * 100) 
+
+pay_inc %>% 
+  summarize(mean(pay_inc))
+
+```
+
+```{r, include=FALSE}
+pay_tbl <- pay_inc %>% 
+  select(district, pay_inc) %>% 
+  reactable(
+    columns = list(
+      district = colDef(name = "School District",
+                        align = "center"),
+      pay_inc = colDef(name = "2015 to 2021 Percent Pay Increase",
+                       align = "center",
+                       format = colFormat(digits = 2,
+                                          suffix = "%"))),
+    striped = TRUE,
+    outlined = TRUE,
+    compact = TRUE,
+    highlight = TRUE,
+    bordered = TRUE)
+
+```
+
+Row {.tabset}
+-----------------------------------------------------------------------
+
+### Change in Teacher Pay Over Time
+
+```{r, include=FALSE}
+
+
+pay_plot <- ggplot(teach_data, aes(year, average_pay)) +
+  geom_line(lwd = 1.6,
+            color = "gray80") +
+  geom_point(size = 2.5,
+             color = "magenta") +
+  scale_x_continuous(limits = c(2015, 2021),
+                     breaks = c(2015, 2016, 2017, 2018, 2019, 2020, 2021)) +
+  scale_y_continuous(limits = c(40000, 70000),
+                     breaks = c(40000, 45000, 50000, 55000, 60000, 65000, 70000),
+                     "Average Teacher Salary",
+                     labels = scales::dollar) + 
+  geom_text_repel(aes(label = scales::dollar(average_pay)),
+                  size = 3.25) + 
+  facet_wrap(~district) +
+  labs(x = "Year")
+```
+
+
+```{r, include=TRUE, fig.width=12, fig.height=7}
+pay_plot
+```
+
+
+
+### Percent Change 
+
+```{r, include=TRUE}
+pay_tbl
+```
